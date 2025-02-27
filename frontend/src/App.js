@@ -9,7 +9,7 @@ import './App.css';
 import L from 'leaflet';
 import ImageSlider from './ImageSlider';
 
-const apiBaseUrl = "http://51.195.222.251:8000"; // update if necessary
+const apiBaseUrl = "http://51.195.222.251:8000";
 
 // Fix default icon issue with React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -19,7 +19,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// MapView component – uses custom icon based on category.
 const MapView = memo(({ center, onMarkerClick, selectedRoute, spots }) => (
   <MapContainer center={center} zoom={13} minZoom={12} style={{ height: '100%', width: '100%' }}>
     <TileLayer
@@ -39,7 +38,7 @@ const MapView = memo(({ center, onMarkerClick, selectedRoute, spots }) => (
               iconUrl: require('leaflet/dist/images/marker-icon.png'),
               iconSize: [25, 41],
               iconAnchor: [12, 41],
-              shadowUrl: require('leaflet/dist/images/marker-shadow.png')
+              shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
             });
         return (
           <Marker
@@ -51,52 +50,99 @@ const MapView = memo(({ center, onMarkerClick, selectedRoute, spots }) => (
         );
       })}
     </MarkerClusterGroup>
-    {selectedRoute && <Polyline positions={selectedRoute.coordinates} color="blue" />}
+    {selectedRoute && <Polyline positions={selectedRoute.coordinates} color="#c04722" />}
   </MapContainer>
 ));
 
-// AnimatedSidebarContent – uses ImageSlider and displays spot details.
 const AnimatedSidebarContent = memo(({ spot }) => {
   const nodeRef = useRef(null);
   return (
     <SwitchTransition mode="out-in">
-      <CSSTransition key={spot.id || spot.name} nodeRef={nodeRef} timeout={300} classNames="sidebar-content">
+      <CSSTransition
+        key={spot.id || spot.name}
+        nodeRef={nodeRef}
+        timeout={300}
+        classNames="sidebar-content"
+      >
         <div ref={nodeRef} className="sidebar-content">
-          <ImageSlider images={spot.images} />
+          <div className="sidebar-slider">
+            <ImageSlider images={spot.images} />
+          </div>
           <h3 className="sidebar-title">{spot.name}</h3>
-          <p className="sidebar-description">{spot.description}</p>
-          <p className="sidebar-category">Category: {spot.category ? spot.category.name : 'None'}</p>
+          <div className="sidebar-details">
+            <p className="sidebar-description">{spot.description}</p>
+          </div>
         </div>
       </CSSTransition>
     </SwitchTransition>
   );
 });
 
-// RouteSelector remains unchanged.
-const RouteSelector = memo(({ routes, onChange }) => (
-  <div className="route-selector">
-    <select onChange={onChange} defaultValue="">
-      <option value="">Select a tourist route</option>
-      {routes.map((route, index) => (
-        <option key={route.id || index} value={route.name}>
-          {route.name}
-        </option>
-      ))}
-    </select>
-  </div>
-));
+const RouteDropdown = ({ routes, selectedRoute, onSelect }) => {
+  const [open, setOpen] = useState(false);
+  const toggleOpen = () => setOpen(prev => !prev);
+  return (
+    <div className="route-dropdown">
+      <button className="route-dropdown-button" onClick={toggleOpen}>
+        {selectedRoute ? selectedRoute.name : "Select a route"}
+        <span className="dropdown-arrow">{open ? '▲' : '▼'}</span>
+      </button>
+      <div className={`route-dropdown-list ${open ? 'open' : ''}`}>
+        <div className="route-dropdown-item" onClick={() => { onSelect(null); setOpen(false); }}>
+          None
+        </div>
+        {routes.map((route, index) => (
+          <div
+            key={route.id || index}
+            className="route-dropdown-item"
+            onClick={() => { onSelect(route); setOpen(false); }}
+          >
+            {route.name}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
-// CategoryFilter lets users choose a category.
-const CategoryFilter = memo(({ categories, onChange }) => (
-  <div className="category-filter">
-    <select onChange={onChange} defaultValue="">
-      <option value="">All Categories</option>
-      {categories.map(cat => (
-        <option key={cat.id} value={cat.id}>
-          {cat.name}
-        </option>
-      ))}
-    </select>
+const CategoryDropdown = ({ categories, selectedCategory, onSelect }) => {
+  const [open, setOpen] = useState(false);
+  const toggleOpen = () => setOpen(prev => !prev);
+  const selectedLabel = selectedCategory
+    ? categories.find(cat => cat.id === selectedCategory)?.name
+    : "All Categories";
+  return (
+    <div className="category-dropdown">
+      <button className="category-dropdown-button" onClick={toggleOpen}>
+        {selectedLabel}
+        <span className="dropdown-arrow">{open ? '▲' : '▼'}</span>
+      </button>
+      <div className={`category-dropdown-list ${open ? 'open' : ''}`}>
+        <div className="category-dropdown-item" onClick={() => { onSelect(null); setOpen(false); }}>
+          All Categories
+        </div>
+        {categories.map(cat => (
+          <div key={cat.id} className="category-dropdown-item" onClick={() => { onSelect(cat.id); setOpen(false); }}>
+            {cat.name}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const BurgerMenu = memo(({ open, routes, selectedRoute, onRouteSelect, onCategorySelect, categories, selectedCategory }) => (
+  <div className={`burger-menu ${open ? 'active' : ''}`}>
+    <div className="burger-content">
+      <div className="burger-section">
+        <label className="burger-label">Tourist Routes</label>
+        <RouteDropdown routes={routes} selectedRoute={selectedRoute} onSelect={onRouteSelect} />
+      </div>
+      <div className="burger-section">
+        <label className="burger-label">Categories</label>
+        <CategoryDropdown categories={categories} selectedCategory={selectedCategory} onSelect={onCategorySelect} />
+      </div>
+    </div>
   </div>
 ));
 
@@ -106,11 +152,10 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [selectedSpot, setSelectedSpot] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const sidebarRef = useRef(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const center = useMemo(() => [48.291, 25.936], []);
 
-  // Fetch spots, routes, and categories from Django API.
   useEffect(() => {
     fetch(`${apiBaseUrl}/api/spots/`)
       .then(res => res.json())
@@ -132,7 +177,6 @@ function App() {
       .catch(err => console.error('Error fetching categories:', err));
   }, []);
 
-  // Filter spots based on selected category.
   const filteredSpots = useMemo(() => {
     if (!selectedCategory) return spots;
     return spots.filter(spot => spot.category && spot.category.id === parseInt(selectedCategory));
@@ -140,21 +184,32 @@ function App() {
 
   const handleMarkerClick = useCallback(spot => setSelectedSpot(spot), []);
   const handleClose = useCallback(() => setSelectedSpot(null), []);
-  const handleRouteChange = useCallback(e => {
-    const routeName = e.target.value;
-    const route = routes.find(r => r.name === routeName);
-    setSelectedRoute(route || null);
-  }, [routes]);
-  const handleCategoryChange = useCallback(e => {
-    setSelectedCategory(e.target.value);
+  const handleRouteSelect = useCallback(route => {
+    setSelectedRoute(route);
   }, []);
+  const handleCategorySelect = useCallback(catId => {
+    setSelectedCategory(catId);
+  }, []);
+  const toggleMenu = useCallback(() => setMenuOpen(prev => !prev), []);
 
   return (
-    <div style={{ display: 'flex', height: '100vh', position: 'relative' }}>
+    <div className="app-container">
       <MapView center={center} onMarkerClick={handleMarkerClick} selectedRoute={selectedRoute} spots={filteredSpots} />
-      <RouteSelector routes={routes} onChange={handleRouteChange} />
-      <CategoryFilter categories={categories} onChange={handleCategoryChange} />
-      <div ref={sidebarRef} className={`sidebar ${selectedSpot ? 'active' : ''}`}>
+      <BurgerMenu
+        open={menuOpen}
+        routes={routes}
+        selectedRoute={selectedRoute}
+        onRouteSelect={handleRouteSelect}
+        onCategorySelect={handleCategorySelect}
+        categories={categories}
+        selectedCategory={selectedCategory}
+      />
+      <button className={`burger-toggle ${menuOpen ? 'active' : ''}`} onClick={toggleMenu}>
+        <span className="burger-line"></span>
+        <span className="burger-line"></span>
+        <span className="burger-line"></span>
+      </button>
+      <div className={`sidebar ${selectedSpot ? 'active' : ''}`}>
         <button className="close-button" onClick={handleClose}>×</button>
         {selectedSpot && <AnimatedSidebarContent spot={selectedSpot} />}
       </div>

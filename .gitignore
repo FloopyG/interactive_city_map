@@ -1,9 +1,11 @@
 backend/venv
 backend/.venv
 backend/.idea
+backend/*.pyc
+backend/tourist_map/__pycache__/
+backend/tourism/__pycache__/
 
-
-# dependencies
+# dependenciesgi
 frontend/node_modules
 frontend/.pnp
 frontend/.pnp.js
