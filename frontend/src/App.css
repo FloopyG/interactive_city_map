@@ -1,0 +1,115 @@
+/* Sidebar container with slide-in/out animation */
+.sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px;
+  max-width: 80%;
+  height: 100%;
+  background: white;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform 300ms ease-in-out;
+}
+
+.sidebar.active {
+  transform: translateX(0);
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* Sidebar content transition (fade effect) */
+.sidebar-content-enter {
+  opacity: 0;
+}
+.sidebar-content-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in-out;
+}
+.sidebar-content-exit {
+  opacity: 1;
+}
+.sidebar-content-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+}
+
+.sidebar-title {
+  margin: 10px 0 10px 0;
+}
+
+.sidebar-description {
+  margin: 0;
+}
+
+/* Responsive sidebar for smaller screens */
+@media (max-width: 600px) {
+  .sidebar {
+    width: 80%;
+  }
+}
+
+/* Style for the route selection dropdown */
+.route-selector {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1100;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.route-selector select {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+/* Category Filter Styles */
+.category-filter {
+  position: absolute;
+  top: 60px; /* Adjust this value as needed */
+  right: 20px;
+  z-index: 1100;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.category-filter select {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+/* Category Filter Styles */
+.category-filter {
+  position: absolute;
+  top: 60px; /* Adjust this value as needed */
+  right: 20px;
+  z-index: 1100;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.category-filter select {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+}
